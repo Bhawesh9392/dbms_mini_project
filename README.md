@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Trading Cards Inventory & Exchange System
 
-## Getting Started
+A full-stack Next.js application for card collectors to track their inventory, manage trading availability, and exchange cards with fellow collectors.
 
-First, run the development server:
+## 🌟 Features
 
+- **Collector Accounts & Authentication**: Secure registration and login using bcrypt password hashing and JWT authentication (HTTP-only cookies + Bearer token support).
+- **Cards Catalog**: Browse available trading cards with attributes such as set, rarity, HP, card types, and evolution stages.
+- **Inventory Management**:
+  - Add and update card quantities and conditions (`Mint`, `Near Mint`, `Excellent`, `Good`, etc.).
+  - Set trade availability (`available_qty`).
+  - View paginated collections (`GET /api/inventory?page=1&limit=20`).
+  - Single-item inspection, editing, and deletion (`GET/PATCH/DELETE /api/inventory/:id`).
+- **Card Exchanges**:
+  - Propose multi-item trades to other collectors with `OFFERED` and `REQUESTED` cards.
+  - Review incoming and outgoing proposals with pagination and status filters (`GET /api/exchanges?role=sent&status=PENDING`).
+  - Detailed proposal inspection with cards breakdown (`/exchange/:id`).
+  - Atomic acceptance flow: accepts trades in a PostgreSQL transaction, automatically validating available stock, decrementing the sender's inventory, and incrementing or creating receiver inventory rows.
+- **Responsive User Interface**:
+  - Built with React 19 & Next.js Server & Client Components.
+  - Clean Tailwind CSS UI for inventory management, trade proposal creation, and trade resolution.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js (App Router)
+- **Database**: PostgreSQL (`pg` pool)
+- **Auth**: JWT (`jsonwebtoken`) & `bcrypt`
+- **Styling**: Tailwind CSS
+
+---
+
+## 🚀 Getting Started
+
+### 1. Database Setup
+Ensure PostgreSQL is running and initialize the database schema:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+psql -U postgres -d trading_cards -f db/schema.sql
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Variables
+Create `.env.local` in the project root:
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=trading_cards
+DB_USER=postgres
+DB_PASSWORD=your_password
+JWT_SECRET=your_jwt_secret_key
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📡 API Overview
 
-To learn more about Next.js, take a look at the following resources:
+### Authentication & Collectors
+- `POST /api/collectors` — Register a new collector.
+- `POST /api/login` — Sign in and obtain JWT (and session cookie).
+- `POST /api/logout` — Clear session cookie.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Inventory
+- `GET /api/inventory?page=1&limit=20&condition=Mint&available=true` — Get paginated collection.
+- `POST /api/inventory` — Add or upsert card to inventory.
+- `GET /api/inventory/:id` — View single inventory item.
+- `PATCH /api/inventory/:id` — Update quantity or available quantity.
+- `DELETE /api/inventory/:id` — Remove item from inventory.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Exchanges
+- `GET /api/exchanges?page=1&limit=20&role=sent&status=PENDING` — Get paginated exchanges.
+- `POST /api/exchanges` — Propose trade with one or more items.
+- `GET /api/exchanges/:id` — View exchange details and line items.
+- `PATCH /api/exchanges/:id` — Accept, reject, or cancel exchange (`{ action: "accept" | "reject" | "cancel" }`).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧪 Testing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run the automated integration test:
+```bash
+node test_phase4.js
+```
